@@ -8,7 +8,7 @@ const cliArgMap = {
   '-i': 'input',
   '-o': 'output',
   '-v': 'verbose',
-  '-q': 'quiet'
+  '-s': 'silent'
 };
 
 module.exports = {

@@ -1,7 +1,7 @@
 const process = require('process');
 const spinner = require('./spinner');
 
-const envelop = (intialValue) => ({start: new Date().getTime(), end: '', result: intialValue});
+const createProgress = (intialValue) => ({start: new Date().getTime(), end: '', result: intialValue});
 const getSecDiff = (d1, d2) => ((d2 - d1) / 1000);
 
 const createStep = (name, fn) => {
@@ -14,44 +14,41 @@ const createStep = (name, fn) => {
   };
 };
 
-const runner = (arr, parentResponse, tracker, resolve) => {
+const runner = (arr, parentResponse, overallProgress, resolve) => {
   const itr = arr.shift();
-  const data = envelop();
+  const currentProgress = createProgress();
   itr(parentResponse).then(r => {
-    data.end = new Date().getTime();
+    currentProgress.end = new Date().getTime();
     spinner();
-    console.info(` ~ ${getSecDiff(data.start, data.end)} secs`);
-    data.result = r;
-    tracker.result.push(data);
+    console.info(` ~ ${getSecDiff(currentProgress.start, currentProgress.end)} secs`);
+    currentProgress.result = r;
+    overallProgress.result.push(currentProgress);
     if (arr.length > 0) {
-      return runner(arr, r, tracker, resolve);
+      return runner(arr, r, overallProgress, resolve);
     } else {
-      tracker.end = new Date().getTime();
-      const {start, end, result} = tracker;
+      overallProgress.end = new Date().getTime();
+      const {start, end, result} = overallProgress;
       resolve({start, end, result});
     }
   });
 };
 
-const asyncWrapper = async (steps, tracker) => {
+const walk = async (steps, overallProgress) => {
   return new Promise(r => {
-    runner(steps, undefined, tracker, r);
+    runner(steps, undefined, overallProgress, r);
   });
 };
 
 const composer = async (name, steps) => {
-  return new Promise((r) => {
-    const tracker = envelop([]);
-    console.info('');
-    console.info(`Starting ${name} ${new Date(tracker.start).toLocaleString()}`);
-    console.info('');
-    asyncWrapper(steps, tracker).then((r2) => {
-      console.info('');
-      process.stdout.write('End');
-      console.info(` ~ ${getSecDiff(tracker.start, tracker.end)} secs`);
-      r(r2);
-    });
-  });
+  const overalProgress = createProgress([]);
+  console.info('');
+  console.info(`Starting ${name} ${new Date(overalProgress.start).toLocaleString()}`);
+  console.info('');
+  const r = await walk(steps, overalProgress);
+  console.info('');
+  process.stdout.write('End');
+  console.info(` ~ ${getSecDiff(overalProgress.start, overalProgress.end)} secs`);
+  return r;
 };
 
 module.exports = {

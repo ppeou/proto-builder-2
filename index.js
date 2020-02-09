@@ -6,11 +6,32 @@ const {getSecondDiff} = require('./libs/helper');
 const {composer, createStep} = require('./libs/orchestra');
 const del = require('del');
 
-const startTime = new Date();
 const finalArgs = {...envs, ...args};
 
-if(!finalArgs.verbose) {
-  console.log = () => '';
+const orgConsole = {};
+const orgStdout = {};
+const [writer, buffer] = ((arr) => [(...params) => arr.push(...params), arr])([]);
+
+const createOverride = (backupFn, nativeFn) => {
+  return (arr) => {
+    arr.forEach(k => {
+      if (!backupFn[k]) {
+        backupFn[k] = nativeFn[k];
+        nativeFn[k] = writer;
+      }
+    });
+  };
+};
+
+const overrideConsole = createOverride(orgConsole, console);
+const overrideStdout = createOverride(orgStdout, process.stdout);
+
+if (!finalArgs.verbose) {
+  overrideConsole(['log']);
+}
+if (finalArgs.silent) {
+  overrideConsole(['log', 'info', 'error', 'warn', 'fatal']);
+  overrideStdout(['write']);
 }
 
 const step1 = createStep('  setup [staging] folders', (cb) => {
@@ -52,15 +73,6 @@ const step6 = createStep('  cleanup [staging] folder', (cb) => {
   cb();
 });
 
-composer('Bundle Proto',[step1, step2, step3, step4, step5, step6]).then(r => {
-  console.info(r);
-});
-
-
-//console.info('cleanup [temp] folders');
-//setup.cleanupTempFolder(finalArgs.staging.js);
-
-//node index.js -i:C:\sample\proto -o:c:\sample\output
-//node index.js -i:C:\sample\proto -o:h:\codes\test\google-protobuf\\dist\js -n:bundle.js
-//node index.js -i:../proto -o:../output
-//node index.js -i:C:\sample\proto1;C:\sample\proto2 -o:c:\sample\output1;c:\sample\output2
+(async () => {
+  await composer('Bundle Proto', [step1, step2, step3, step4, step5, step6]);
+})();
