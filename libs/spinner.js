@@ -1,3 +1,5 @@
+let iid;
+
 const toggleSpinner = () => {
   if (iid) {
     clearInterval(iid);

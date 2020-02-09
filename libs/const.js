@@ -7,7 +7,8 @@ const internalPaths = {
 const cliArgMap = {
   '-i': 'input',
   '-o': 'output',
-  '-v': 'verbose'
+  '-v': 'verbose',
+  '-q': 'quiet'
 };
 
 module.exports = {

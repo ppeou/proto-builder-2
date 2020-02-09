@@ -3,9 +3,16 @@ const spinner = require('./spinner');
 
 const envelop = (intialValue) => ({start: new Date().getTime(), end: '', result: intialValue});
 const getSecDiff = (d1, d2) => ((d2 - d1) / 1000);
-let iid;
 
-
+const createStep = (name, fn) => {
+  return (data) => {
+    return new Promise((resolver) => {
+      process.stdout.write(`${name} `);
+      spinner();
+      fn.call(null, resolver, data);
+    });
+  };
+};
 
 const runner = (arr, parentResponse, tracker, resolve) => {
   const itr = arr.shift();
@@ -26,19 +33,24 @@ const runner = (arr, parentResponse, tracker, resolve) => {
   });
 };
 
-const createStep = (name, fn) => {
-  return (data) => {
-    return new Promise((resolver) => {
-      process.stdout.write(`${name} `);
-      spinner();
-      fn.call(null, resolver, data);
-    });
-  };
+const asyncWrapper = async (steps, tracker) => {
+  return new Promise(r => {
+    runner(steps, undefined, tracker, r);
+  });
 };
 
-const composer = async (steps) => {
+const composer = async (name, steps) => {
   return new Promise((r) => {
-    runner(steps, undefined, envelop([]), r);
+    const tracker = envelop([]);
+    console.info('');
+    console.info(`Starting ${name} ${new Date(tracker.start).toLocaleString()}`);
+    console.info('');
+    asyncWrapper(steps, tracker).then((r2) => {
+      console.info('');
+      process.stdout.write('End');
+      console.info(` ~ ${getSecDiff(tracker.start, tracker.end)} secs`);
+      r(r2);
+    });
   });
 };
 

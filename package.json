@@ -1,0 +1,23 @@
+{
+  "name": "proto-builder",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "bin": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "pkg": {
+    "targets": [
+      "node10"
+    ]
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "browserify": "^16.5.0",
+    "del": "^5.1.0",
+    "fs-extra": "^8.1.0",
+    "google-protobuf": "^3.11.3"
+  }
+}

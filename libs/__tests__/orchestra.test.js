@@ -18,7 +18,7 @@ composer([fn1, fn2, fn3]).then(r => {
   console.log('final', r);
 });*/
 
-composer([
+composer('Sample workflow',[
   createStep('Step 1',(callback, data) => {
     setTimeout(() => callback('fn 1'), 1000);
   }),

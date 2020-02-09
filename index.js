@@ -13,13 +13,12 @@ if(!finalArgs.verbose) {
   console.log = () => '';
 }
 
-
 const step1 = createStep('  setup [staging] folders', (cb) => {
   setup.prepareTempFolders({
     output: finalArgs.output,
     ...finalArgs.staging,
   });
-  cb();
+  cb('');
 });
 
 const step2 = createStep('  copy [proto] files', (cb) => {
@@ -42,69 +41,21 @@ const step4 = createStep('  bundle [cmj] files', (cb) => {
     outputFile: path.resolve(finalArgs.staging.js, 'bundle.js')
   }).then(cb);
 });
+
 const step5 = createStep('  copy to [output] folder', (cb) => {
   setup.copyFiles(finalArgs.staging.basedir, finalArgs.output);
-  cb();;
+  cb();
 });
+
 const step6 = createStep('  cleanup [staging] folder', (cb) => {
   del(finalArgs.staging.basedir);
   cb();
 });
 
-composer([step1, step2, step3, step4, step5, step6]);
-
-return;
-
-console.log(finalArgs);
-
-console.info(`Staring [${startTime.toLocaleString()}]`);
-
-let now = new Date();
-console.info('  setup [staging] folders');
-setup.prepareTempFolders({
-  output: finalArgs.output,
-  ...finalArgs.staging,
+composer('Bundle Proto',[step1, step2, step3, step4, step5, step6]).then(r => {
+  console.info(r);
 });
-console.info(`    ~ ${getSecondDiff(now, new Date())} secs`);
 
-now = new Date();
-console.info('  copy [proto] files');
-setup.copyFiles(finalArgs.input, finalArgs.staging.proto);
-console.info(`    ~ ${getSecondDiff(now, new Date())} secs`);
-
-(async () => {
-  
-  now = new Date();
-  console.info('  compiling [proto] files');  
-  await setup.compileProtobuf({
-    compiler: 'compiler\\protoc.exe',
-    protoFolder: finalArgs.staging.proto,
-    javaFolder: finalArgs.staging.java,
-    cmjFolder: finalArgs.staging.cmj,
-  });
-  console.info(`    ~ ${getSecondDiff(now, new Date())} secs`);
-
-  now = new Date();
-  console.info('  bundle [cmj] files');
-  await setup.bundleJSFiles({
-    cmjFolder: finalArgs.staging.cmj,
-    outputFile: path.resolve(finalArgs.staging.js, 'bundle.js')
-  });
-  console.info(`    ~ ${getSecondDiff(now, new Date())} secs`);
-
-  now = new Date();
-  console.info('  copy to [output] folder');
-  setup.copyFiles(finalArgs.staging.basedir, finalArgs.output);
-
-  now = new Date();
-  console.info('  cleanup [staging] folder');
-  await del(finalArgs.staging.basedir);
-  console.info(`    ~ ${getSecondDiff(now, new Date())} secs`);
-
-  const endTime = new Date();
-  console.info(`End [${endTime.toLocaleString()}]`);
-  console.info(`  took about ~ ${getSecondDiff(startTime, endTime)} secs`);
-})();
 
 //console.info('cleanup [temp] folders');
 //setup.cleanupTempFolder(finalArgs.staging.js);
